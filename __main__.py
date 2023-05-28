@@ -18,7 +18,11 @@ def get_session():
     print("get session successfully!")
     return vk_session
 
+
+#----------------------------------------------
+#functions related to process of checking range of request
 def ask():
+    '''function is used by check range'''
     choice = input("do you want to continue?(y/n):")
     if "n" == choice:
         return -1
@@ -26,22 +30,29 @@ def ask():
         return 1
     else:
         ask()
+def check_is_range_already_exist(begin,end,ranges):
+    for r in ranges:
+        check1 = begin in r or end in r
+        check2 = lambda n: r[0] <= n <= r[1]
+        if check1 or check2(begin) or check2(end):
+            print("there is similar or the same range already:{} !".format(r))
+            if ask() == -1:
+                return None
+    return 1
 def check_range(db,table, begin, end):
     if not DB.is_table_empty(db,table):
         ranges = DB.get_range(db,table)
-        for r in ranges:
-            check1 = begin in r or end in r
-            check2 = lambda n: r[0] <= n <= r[1]
-            if check1 or check2(begin) or check2(end):
-                print("there is similar or the same range already:{} !".format(r))
-                if ask() == -1:
-                    return None
+        if check_is_range_already_exist(begin,end,ranges) == None:
+            return None
 
     max_id = DB.get_max_id(db,table)
     max_id = 0 if max_id == None else max_id
     
     DB.set_range(db,[(max_id+1,begin,end)],table)
+#-------------------------------------------------
 
+#---------------------------------------------------
+#section of functions representing user's commands
 def scan(arguments,mdb,session):
     if len(arguments) != 2:
         print("inccorect number of arguments!")
@@ -61,7 +72,9 @@ def scan(arguments,mdb,session):
         return None
 
     run_through_music(begin,end,session.get_iter(),mdb,target)
-    
+#------------------------------------------------------------
+
+
 def run_through_music(begin,end, mus_iter,mdb,table):
     #get iterator for slice or for every item from response(good luck with it)
     #also if begin is None, then end is the same
@@ -85,6 +98,7 @@ def run_through_music(begin,end, mus_iter,mdb,table):
         
 if __name__ == "__main__":
     system("cls")
+    
     session = get_session()
     vkaudio = VkAudio(session)
     mdb = DB.open_db()

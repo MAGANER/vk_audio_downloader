@@ -33,8 +33,10 @@ def __get_response():
         return response
     except KeyboardInterrupt:
         print("\n see you later!")
-        exit(0)   
+        exit(0)
+
 def run(functions, mdb, audio):
+    '''functions received dict of user commands, data base and audio session object'''
     while True:
         response = __get_response()
         
