@@ -1,24 +1,14 @@
 import vk_api
 from vk_api.audio import VkAudio
-from secret_input import *
 import collections
 from itertools import islice
-import re
 from os import system
 import db as DB
-
-def get_data():
-    '''input user data to process auth.
-       Import note: you set permission at your account settings
-       for foreign application to get access to your acount's music 
-    '''
-    login = secret_input("enter login:","*")
-    password = secret_input("enter password:","*")
-    return login, password
+import interface
 
 def get_session():
     '''send request to get main vk api object'''
-    login,password = get_data()
+    login,password = interface.get_data()
     vk_session = vk_api.VkApi(login=login,password=password)
     try:
         vk_session.auth()
@@ -28,54 +18,50 @@ def get_session():
     print("get session successfully!")
     return vk_session
 
-def get_number():
-    '''get range of objects you will receive'''
-    number = input("enter range of tracks/albums to search:")
-    pattern = re.compile("\d*,\d*")
-    
-    if number == "all":
-        return None,None
-
-    #correct input is n,n where n is decimal number
-    if pattern.match(number):
-        left, right  = number.split(",")
-        return int(left), int(right)
+def ask():
+    choice = input("do you want to continue?(y/n):")
+    if "n" == choice:
+        return -1
+    elif "y" == choice:
+        return 1
     else:
-        system("cls")
-        print("inccorect input! it must be n,n  where n is decimal number") 
-        get_number()
+        ask()
 def check_range(db,table, begin, end):
     if not DB.is_table_empty(db,table):
         ranges = DB.get_range(db,table)
         for r in ranges:
-            if begin in r or end in r:
+            check1 = begin in r or end in r
+            check2 = lambda n: r[0] <= n <= r[1]
+            if check1 or check2(begin) or check2(end):
                 print("there is similar or the same range already:{} !".format(r))
+                if ask() == -1:
+                    return None
 
     max_id = DB.get_max_id(db,table)
     max_id = 0 if max_id == None else max_id
     
     DB.set_range(db,[(max_id+1,begin,end)],table)
-def process(session):
-    mdb = DB.open_db()
-    vkaudio = VkAudio(session)
-        
-    choice = input("what do you want to scan:ls tracks/ls albums/search(1,2,3)?:")
+
+def scan(arguments,mdb,session):
+    if len(arguments) != 2:
+        print("inccorect number of arguments!")
+        return None
+    target, rng = arguments
+    if not target.upper() in ("TRACKS","ALBUMS"):
+        print("{} is invalid target!".format(target))
+        return None
+
+    begin, end = interface.get_number(rng)
+    if begin == -1:
+        print("{} is invalid range!".format(rng))
+        return None
+
+    if check_range(mdb,target+"_RANGE",begin,end) == None:
+        print("{} won't be scanned.".format(target))
+        return None
+
+    run_through_music(begin,end,session.get_iter(),mdb,target)
     
-    if "1" == choice:
-        begin, end = get_number()
-        check_range(mdb,"TRACKS_RANGE",begin,end)
-        
-        run_through_music(begin,end,vkaudio.get_iter(),mdb,"TRACKS")
-    elif "2" == choice:
-        begin, end = get_number()
-        check_range(mdb,"ALBUMS_RANGE",begin,end)
-        
-        run_through_music(begin, end, vkaudio.get_albums_iter(),mdb,"ALBUMS")
-    elif "3" == choice:
-        pass
-    else:
-        system("cls")
-        process(session)
 def run_through_music(begin,end, mus_iter,mdb,table):
     #get iterator for slice or for every item from response(good luck with it)
     #also if begin is None, then end is the same
@@ -99,8 +85,11 @@ def run_through_music(begin,end, mus_iter,mdb,table):
         
 if __name__ == "__main__":
     system("cls")
-    process(get_session())
+    session = get_session()
+    vkaudio = VkAudio(session)
+    mdb = DB.open_db()
 
-
-
-
+    functions = {
+        "scan":scan
+        }
+    interface.run(functions,mdb,vkaudio)
