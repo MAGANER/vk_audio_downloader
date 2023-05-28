@@ -5,7 +5,7 @@ import collections
 from itertools import islice
 import re
 from os import system
-import db
+import db as DB
 
 def get_data():
     '''input user data to process auth.
@@ -31,7 +31,7 @@ def get_session():
 def get_number():
     '''get range of objects you will receive'''
     number = input("enter range of tracks/albums to search:")
-    pattern = re.compile("\d,\d")
+    pattern = re.compile("\d*,\d*")
     
     if number == "all":
         return None,None
@@ -42,29 +42,55 @@ def get_number():
         return int(left), int(right)
     else:
         system("cls")
+        print("inccorect input! it must be n,n  where n is decimal number") 
         get_number()
-        
-def process(db,session):
+def check_range(db,table, begin, end):
+    if not DB.is_table_empty(db,table):
+        ranges = DB.get_range(db,table)
+        for r in ranges:
+            if begin in r or end in r:
+                print("there is similar or the same range already:{} !".format(r))
+
+    max_id = DB.get_max_id(db,table)
+    max_id = 0 if max_id == None else max_id
+    
+    DB.set_range(db,[(max_id+1,begin,end)],table)
+def process(session):
+    mdb = DB.open_db()
     vkaudio = VkAudio(session)
         
     choice = input("what do you want to scan:ls tracks/ls albums/search(1,2,3)?:")
     
     if "1" == choice:
         begin, end = get_number()
-        run_through_music(begin,end,vkaudio.get_iter(),db,"TRACKS")
+        check_range(mdb,"TRACKS_RANGE",begin,end)
+        
+        run_through_music(begin,end,vkaudio.get_iter(),mdb,"TRACKS")
     elif "2" == choice:
         begin, end = get_number()
-        run_through_music(begin, end, vkaudio.get_albums_iter(),db,"ALBUMS")
+        check_range(mdb,"ALBUMS_RANGE",begin,end)
+        
+        run_through_music(begin, end, vkaudio.get_albums_iter(),mdb,"ALBUMS")
     elif "3" == choice:
         pass
     else:
         system("cls")
-        process()
+        process(session)
 def run_through_music(begin,end, mus_iter,mdb,table):
-    it = mus_iter if begin == None else islice(mus_iter,begin,end,1)
+    #get iterator for slice or for every item from response(good luck with it)
+    #also if begin is None, then end is the same
+    try:
+        it = mus_iter if begin == None else islice(mus_iter,begin,end,1)
+    except Exception as e: #out of range error may appear
+        print(str(e))
+        return
+    
+    max_id = DB.get_max_id(mdb,table)
+    counter = 0 if max_id == None else max_id + 1
     for track in it:
-        data = [(0,str(track.get('title')),str(track.get('artist')),str(track.get('url')))]
-        db.add(mdb,data,table)
+        data = [(counter,str(track.get('title')),str(track.get('artist')),str(track.get('url')))]
+        DB.add(mdb,data,table)
+        counter += 1
         
         print("artist : {}".format(data[0][2]))
         print("title : {}".format(data[0][1]))
@@ -73,8 +99,7 @@ def run_through_music(begin,end, mus_iter,mdb,table):
         
 if __name__ == "__main__":
     system("cls")
-    mdb = db.open_db()
-    process(mdb,get_session())
+    process(get_session())
 
 
 
