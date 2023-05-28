@@ -27,13 +27,20 @@ def get_number(number_input):
         return -1, -1
 
 
+def __get_response():
+    try:
+        response = input(">>")
+        return response
+    except KeyboardInterrupt:
+        print("\n see you later!")
+        exit(0)   
 def run(functions, mdb, audio):
     while True:
-        response = input(">>")
+        response = __get_response()
+        
         head, *arguments = response.split(" ")
-
         if head in functions.keys():
             if functions[head](arguments,mdb,audio) == None:
                 print("something went wrong with {} function...".format(head))
-        else:
-            print("{} doesn't exist!".format(head))
+            else:
+                print("{} doesn't exist!".format(head))
