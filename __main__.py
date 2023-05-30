@@ -7,6 +7,13 @@ import db as DB
 import interface
 import inspect
 
+def list_split(main_list, chunk_size):
+    splitted_list = list()
+
+    for i in range(0, len(main_list), chunk_size):
+        splitted_list.append(main_list[i:i+chunk_size])
+    return splitted_list
+
 def get_session():
     '''send request to get main vk api object'''
     login,password = interface.get_data()
@@ -16,6 +23,7 @@ def get_session():
     except vk_api.AuthError as error_msg:
         print(error_msg)
         exit(-1)
+        
     print("get session successfully!")
     return vk_session
 
@@ -78,7 +86,7 @@ def scan(arguments,mdb,session):
 
 
 def size(arguments, mdb,session):
-    '''get size of loaded data. example: size [tracks|albums]'''
+    '''size - get size of loaded data. example: size [tracks|albums]'''
     if interface.check_arguments(arguments,1) == -1:
         return None
 
@@ -98,9 +106,19 @@ def get(arguments, mdb, session):
     target = arguments[0]
     if interface.check_target(target) == -1:
         return None
-
     elements = DB.get_elements(mdb,target.upper())
+    total_size = len(elements)
 
+    counter = 0
+    for l in list_split(elements,10):
+        for el in l:
+            if not el == None:
+                print("{} - {}".format(el[0],el[1]))
+        print("slice #{}".format(counter))
+        q = input("-------------")
+        if "q" == q:break
+        counter+= 1
+            
     return 1#ok
 
 def get_help(functions):
