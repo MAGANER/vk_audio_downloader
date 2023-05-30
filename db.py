@@ -79,3 +79,21 @@ def is_table_empty(db, table):
         data = db.execute(req)
         for row in data:
             return row[0] == 0
+
+def get_size(db, table):
+    '''get number of elements in table'''
+    req = "SELECT COUNT(id) FROM {}".format(table)
+    with db:
+        data = db.execute(req)
+        for row in data:
+            return row[0]
+        
+def get_elements(db,table):
+    req = "SELECT title,artist,url FROM {}".format(table)
+
+    elements = []
+    with db:
+        data = db.execute(req)
+        for row in data:
+            elements.append(row)
+    return elements

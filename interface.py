@@ -35,6 +35,15 @@ def __get_response():
         print("\n see you later!")
         exit(0)
 
+def check_arguments(args, correct_number):
+    if len(args) != correct_number:
+        print("incorrect number of arguments")
+        return -1
+def check_target(target):
+    if not target.upper() in ("TRACKS","ALBUMS"):
+        print("{} is invalid target!".format(target))
+        return -1
+
 def run(functions, mdb, audio):
     '''functions received dict of user commands, data base and audio session object'''
     while True:

@@ -54,12 +54,11 @@ def check_range(db,table, begin, end):
 #---------------------------------------------------
 #section of functions representing user's commands
 def scan(arguments,mdb,session):
-    if len(arguments) != 2:
-        print("inccorect number of arguments!")
+    if interface.check_arguments(arguments, 2) == -1:
         return None
+
     target, rng = arguments
-    if not target.upper() in ("TRACKS","ALBUMS"):
-        print("{} is invalid target!".format(target))
+    if interface.check_target(target) == -1:
         return None
 
     begin, end = interface.get_number(rng)
@@ -72,7 +71,30 @@ def scan(arguments,mdb,session):
         return None
 
     run_through_music(begin,end,session.get_iter(),mdb,target)
-#------------------------------------------------------------
+
+
+def size(arguments, mdb,session):
+    '''get size of tables'''
+    if interface.check_arguments(arguments,1) == -1:
+        return None
+
+    target = arguments[0]
+    if interface.check_target(target) == -1:
+        return None
+    
+    print("size of {} is {}.".format(target,DB.get_size(mdb,target.upper())))
+
+def get(arguments, mdb, session):
+    if interface.check_arguments(arguments,1) == -1:
+        return None
+
+    target = arguments[0]
+    if interface.check_target(target) == -1:
+        return None
+
+    elements = DB.get_elements(mdb,target.upper())
+    
+#------------------------------------------------------------    
 
 
 def run_through_music(begin,end, mus_iter,mdb,table):
@@ -104,6 +126,8 @@ if __name__ == "__main__":
     mdb = DB.open_db()
 
     functions = {
-        "scan":scan
+        "scan":scan,
+        "size":size,
+        "get":get
         }
     interface.run(functions,mdb,vkaudio)
