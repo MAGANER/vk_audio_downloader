@@ -109,6 +109,10 @@ def get_help(functions):
         print("{}.".format(str(v.__doc__)))
 
     return 1#ok
+def clear(arguments,mdb,session):
+    '''clear - clear the terminal screen.'''
+    os.system("clear")
+    return 1#ok
 
 #------------------------------------------------------------    
 
@@ -145,6 +149,7 @@ if __name__ == "__main__":
         "scan":scan,
         "size":size,
         "get":get,
-        "help":get_help
+        "help":get_help,
+        "clear":clear
         }
     interface.run(functions,mdb,vkaudio)
