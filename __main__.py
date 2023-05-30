@@ -5,6 +5,7 @@ from itertools import islice
 from os import system
 import db as DB
 import interface
+import inspect
 
 def get_session():
     '''send request to get main vk api object'''
@@ -54,6 +55,7 @@ def check_range(db,table, begin, end):
 #---------------------------------------------------
 #section of functions representing user's commands
 def scan(arguments,mdb,session):
+    '''scan - scan accounts music to receive tracks/albums in specified range. example : scan tracks 10,100'''
     if interface.check_arguments(arguments, 2) == -1:
         return None
 
@@ -76,7 +78,7 @@ def scan(arguments,mdb,session):
 
 
 def size(arguments, mdb,session):
-    '''get size of tables'''
+    '''get size of loaded data. example: size [tracks|albums]'''
     if interface.check_arguments(arguments,1) == -1:
         return None
 
@@ -89,6 +91,7 @@ def size(arguments, mdb,session):
     return 1#ok
 
 def get(arguments, mdb, session):
+    '''get - get list of tracks/albums. example: get [tracks|albums]'''
     if interface.check_arguments(arguments,1) == -1:
         return None
 
@@ -99,7 +102,14 @@ def get(arguments, mdb, session):
     elements = DB.get_elements(mdb,target.upper())
 
     return 1#ok
-    
+
+def get_help(functions):
+    '''help - show this text'''
+    for k, v in functions.items():
+        print("{}.".format(str(v.__doc__)))
+
+    return 1#ok
+
 #------------------------------------------------------------    
 
 
@@ -123,7 +133,7 @@ def run_through_music(begin,end, mus_iter,mdb,table):
         print("title : {}".format(data[0][1]))
         print("link(url) : {}".format(data[0][3]))
         print('-'*10)
-        
+    
 if __name__ == "__main__":
     system("cls")
     
@@ -134,6 +144,7 @@ if __name__ == "__main__":
     functions = {
         "scan":scan,
         "size":size,
-        "get":get
+        "get":get,
+        "help":get_help
         }
     interface.run(functions,mdb,vkaudio)
