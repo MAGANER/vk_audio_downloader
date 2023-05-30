@@ -1,3 +1,4 @@
+
 from secret_input import *
 from os import system
 import re
@@ -51,7 +52,11 @@ def run(functions, mdb, audio):
         
         head, *arguments = response.split(" ")
         if head in functions.keys():
+            if head == "help":
+                functions[head](functions)
+                continue
+
             if functions[head](arguments,mdb,audio) == None:
                 print("something went wrong with {} function...".format(head))
-            else:
-                print("{} doesn't exist!".format(head))
+        else:
+            print("{} doesn't exist!".format(head))
