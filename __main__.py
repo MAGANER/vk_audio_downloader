@@ -72,6 +72,8 @@ def scan(arguments,mdb,session):
 
     run_through_music(begin,end,session.get_iter(),mdb,target)
 
+    return 1
+
 
 def size(arguments, mdb,session):
     '''get size of tables'''
@@ -84,6 +86,8 @@ def size(arguments, mdb,session):
     
     print("size of {} is {}.".format(target,DB.get_size(mdb,target.upper())))
 
+    return 1#ok
+
 def get(arguments, mdb, session):
     if interface.check_arguments(arguments,1) == -1:
         return None
@@ -93,6 +97,8 @@ def get(arguments, mdb, session):
         return None
 
     elements = DB.get_elements(mdb,target.upper())
+
+    return 1#ok
     
 #------------------------------------------------------------    
 
