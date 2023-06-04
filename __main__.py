@@ -48,14 +48,17 @@ def ask():
 #---------------------------------------------------
 #section of functions representing user's commands
 def scan(arguments,mdb,session):
-    '''scan - scan accounts music to receive tracks/albums in specified range. example : scan tracks 10,100'''
-    if interface.check_arguments(arguments, 2) == -1:
+    '''scan - scan accounts music to receive tracks in specified range. example : scan  10,100'''
+    if interface.check_arguments(arguments, 1) == -1:
         return None
 
-    target, rng = arguments
-    if interface.check_target(target) == -1:
-        return None
+    target = "tracks"
+    rng = arguments[0]
 
+    #DISABLED FOR SOMETIME
+    #if interface.check_target(target) == -1:
+    #    return None
+    
     begin, end = interface.get_number(rng)
     if begin == -1:
         print("{} is invalid range!".format(rng))
@@ -67,26 +70,31 @@ def scan(arguments,mdb,session):
 
 
 def size(arguments, mdb,session):
-    '''size - get size of loaded data. example: size [tracks|albums]'''
-    if interface.check_arguments(arguments,1) == -1:
+    '''size - get size of loaded data. example'''
+    if interface.check_arguments(arguments,0) == -1:
         return None
 
-    target = arguments[0]
-    if interface.check_target(target) == -1:
-        return None
+    target = "tracks"
+
+    #DISABLED FOR SOMETIME
+    #if interface.check_target(target) == -1:
+    #    return None
     
     print("size of {} is {}.".format(target,DB.get_size(mdb,target.upper())))
 
     return 1#ok
 
 def get(arguments, mdb, session):
-    '''get - get list of tracks/albums. example: get [tracks|albums]'''
-    if interface.check_arguments(arguments,1) == -1:
+    '''get - get list of tracks.'''
+    if interface.check_arguments(arguments,0) == -1:
         return None
 
-    target = arguments[0]
-    if interface.check_target(target) == -1:
-        return None
+    target = "tracks"
+
+    #DISABLED FOR SOMETIME
+    #if interface.check_target(target) == -1:
+    #    return None
+    
     elements = DB.get_elements(mdb,target.upper())
     total_size = len(elements)
 
@@ -114,7 +122,8 @@ def clear(arguments,mdb,session):
     return 1#ok
 
 def find(arguments, mdb, session):
-    '''find - find substring in saved tracks/albums, also specify case sensitivity. example - find "wish yo" albums|tracks artist|track 0'''
+    '''find - find substring in saved tracks/albums, also specify case sensitivity. example - find "wish yo" artist|track 0
+       where 0 means non case sensible'''
     def unite_substr(args):
         #i think there is better solution
         begin, end = -1,-1
@@ -145,12 +154,14 @@ def find(arguments, mdb, session):
 
     substr, arguments = unite_substr(arguments)
      
-    if interface.check_arguments(arguments,3) == -1:
+    if interface.check_arguments(arguments,2) == -1:
         return None
-    if interface.check_target(arguments[0]) == -1:
-        return None
+    
+    #if interface.check_target(arguments[0]) == -1:
+    #    return None
 
-    target,field, *case = arguments
+    target="tracks"
+    field,case = arguments
     if field not in ["track","artist"]:
         print("the third argument must be track or artist!")
         return None
