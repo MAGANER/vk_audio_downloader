@@ -2,6 +2,7 @@ import vk_api
 from vk_api.audio import VkAudio
 import collections
 from itertools import islice
+import os
 from os import system, path
 import db as DB
 import interface
@@ -22,10 +23,7 @@ def get_session():
     login,password = interface.get_data()
     vk_session = vk_api.VkApi(login=login,password=password)
     try:
-        if os.path.isfile("vk_config.v2.json"):
-            vk_session.auth(token_only=True)
-        else:
-            vk_session.auth()
+        vk_session.auth()
     except vk_api.AuthError as error_msg:
         print(error_msg)
         exit(-1)
@@ -45,25 +43,6 @@ def ask():
         return 1
     else:
         ask()
-def check_is_range_already_exist(begin,end,ranges):
-    for r in ranges:
-        check1 = begin in r or end in r
-        check2 = lambda n: r[0] <= n <= r[1]
-        if check1 or check2(begin) or check2(end):
-            print("there is similar or the same range already:{} !".format(r))
-            if ask() == -1:
-                return None
-    return 1
-def check_range(db,table, begin, end):
-    if not DB.is_table_empty(db,table):
-        ranges = DB.get_range(db,table)
-        if check_is_range_already_exist(begin,end,ranges) == None:
-            return None
-
-    max_id = DB.get_max_id(db,table)
-    max_id = 0 if max_id == None else max_id
-    
-    DB.set_range(db,[(max_id+1,begin,end)],table)
 #-------------------------------------------------
 
 #---------------------------------------------------
@@ -80,10 +59,6 @@ def scan(arguments,mdb,session):
     begin, end = interface.get_number(rng)
     if begin == -1:
         print("{} is invalid range!".format(rng))
-        return None
-
-    if check_range(mdb,target+"_RANGE",begin,end) == None:
-        print("{} won't be scanned.".format(target))
         return None
 
     run_through_music(begin,end,session.get_iter(),mdb,target)
