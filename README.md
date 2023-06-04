@@ -1,6 +1,10 @@
 # vk_audio_downloader
 little CLI app to download tracks from vk.
 
+# Dependencies
+```vk_api```   - 11.9.9<br>
+```requests``` - 2.26.0<br>
+
 # Overall
 1. It's available on windows only.<br>
 2. It has ability to download only tracks now.<br>
