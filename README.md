@@ -2,7 +2,7 @@
 little CLI app to download tracks from vk.
 
 # Overall
-1. It's available on windows only.(soon it would be easy to run anywhere)<br>
+1. It's available on windows only.<br>
 2. It has ability to download only tracks now.<br>
 
 
