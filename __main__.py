@@ -200,7 +200,12 @@ def run_through_music(begin,end, mus_iter,mdb,table):
     
 if __name__ == "__main__":
     system("cls")
-    
+    try:
+        os.chdir("vk_audio_downloader")
+    except Exception as e:
+        print("error! please move to folder or rename it as vk_audio_downloader")
+        exit(-1)
+        
     session = get_session()
     vkaudio = VkAudio(session)
     mdb = DB.open_db()
