@@ -2,7 +2,7 @@ import vk_api
 from vk_api.audio import VkAudio
 import collections
 from itertools import islice
-from os import system
+from os import system, path
 import db as DB
 import interface
 from functools import reduce
@@ -22,7 +22,10 @@ def get_session():
     login,password = interface.get_data()
     vk_session = vk_api.VkApi(login=login,password=password)
     try:
-        vk_session.auth(token_only=True)
+        if os.path.isfile("vk_config.v2.json"):
+            vk_session.auth(token_only=True)
+        else:
+            vk_session.auth()
     except vk_api.AuthError as error_msg:
         print(error_msg)
         exit(-1)
