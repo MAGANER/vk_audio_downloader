@@ -20,11 +20,11 @@ After you will be able to use the application.
 After music is scanned to obtain name, artist and url, data is saved in local data base and then<br>
 you can easily download it via ```find``` function.<br>
 
-```size``` - get size of loaded data.
-```get``` - get list of tracks.
+```size``` - get size of loaded data.<br>
+```get``` - get list of tracks.<br>
 
-```help``` - show this text.
-```clear``` - clear the terminal screen.
+```help``` - show this text.<br>
+```clear``` - clear the terminal screen.<br>
 
 ```find``` - find substring in saved tracks/albums, also specify case sensitivity. example - find "wish yo" artist|track 0<br>
               where 0 means non case sensible.
