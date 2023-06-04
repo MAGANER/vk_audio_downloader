@@ -5,7 +5,10 @@ from itertools import islice
 from os import system
 import db as DB
 import interface
-import inspect
+from functools import reduce
+import re
+import audio_downloader as ad
+import requests
 
 def list_split(main_list, chunk_size):
     splitted_list = list()
@@ -19,7 +22,7 @@ def get_session():
     login,password = interface.get_data()
     vk_session = vk_api.VkApi(login=login,password=password)
     try:
-        vk_session.auth()
+        vk_session.auth(token_only=True)
     except vk_api.AuthError as error_msg:
         print(error_msg)
         exit(-1)
@@ -132,6 +135,55 @@ def clear(arguments,mdb,session):
     os.system("clear")
     return 1#ok
 
+def find(arguments, mdb, session):
+    '''find - find substring in saved tracks/albums, also specify case sensitivity. example - find "wish yo" albums|tracks artist|track 0'''
+    def unite_substr(args):
+        #i think there is better solution
+        begin, end = -1,-1
+        for el in enumerate(args,start=0):
+            if el[1].count('"') == 2:#there might argument made of 1 word
+                begin = end = el[0]
+                break
+            if '"' in el[1] and begin ==-1:
+                begin = el[0]
+            if '"' in el[1] and begin != -1:
+                end = el[0]
+        
+        #incorrect argument
+        if begin == -1 or end == -1: return None
+
+        #too boring to explaing set stuff
+        arg = set(range(begin,end+1))
+        all_ids = set(range(0,len(arguments)))
+        save = all_ids.difference(arg)
+
+        another_arguments = list()
+        for i in list(save):
+            another_arguments.append(args[i])
+            
+        substr = args[begin] if begin == end else str(reduce(lambda a,b:a+" "+b,args[begin:end+1]))
+        return substr, another_arguments
+
+
+    substr, arguments = unite_substr(arguments)
+     
+    if interface.check_arguments(arguments,3) == -1:
+        return None
+    if interface.check_target(arguments[0]) == -1:
+        return None
+
+    target,field, *case = arguments
+    if field not in ["track","artist"]:
+        print("the third argument must be track or artist!")
+        return None
+
+    items = list(set(DB.get_elements(mdb,target,substr[1:-1],case,field)))
+    for obj in enumerate(items):
+        print("{}: {} - {}".format(obj[0],obj[1][1],obj[1][0]))
+
+    ad.download(items)
+    return 1#
+    
 #------------------------------------------------------------    
 
 
@@ -168,6 +220,7 @@ if __name__ == "__main__":
         "size":size,
         "get":get,
         "help":get_help,
-        "clear":clear
+        "clear":clear,
+        "find":find
         }
     interface.run(functions,mdb,vkaudio)
