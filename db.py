@@ -1,4 +1,3 @@
-
 from os.path import isfile
 import sqlite3 as sl
 
