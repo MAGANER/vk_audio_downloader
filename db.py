@@ -1,3 +1,4 @@
+
 from os.path import isfile
 import sqlite3 as sl
 
@@ -88,8 +89,11 @@ def get_size(db, table):
         for row in data:
             return row[0]
         
-def get_elements(db,table):
+def get_elements(db,table, substr="",case=0,field=""):
     req = "SELECT title,artist,url FROM {}".format(table)
+    if substr:
+        title = field if case == 0 else "LOWER({})".format(field)
+        req += " WHERE {} like '%{}%'".format(title,substr)
 
     elements = []
     with db:
