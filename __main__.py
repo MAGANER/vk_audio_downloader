@@ -37,13 +37,16 @@ def get_session():
 #functions related to process of checking range of request
 def ask():
     '''function is used by check range'''
-    choice = input("do you want to continue?(y/n):")
-    if "n" == choice:
-        return -1
-    elif "y" == choice:
-        return 1
-    else:
-        ask()
+    try:
+        choice = input("do you want to continue?(y/n):")
+        if "n" == choice:
+            return -1
+        elif "y" == choice:
+            return 1
+        else:
+            ask()
+    except KeyboardInterrupt:
+        print("ok...")
 #-------------------------------------------------
 
 #---------------------------------------------------
@@ -71,7 +74,7 @@ def scan(arguments,mdb,session):
 
 
 def size(arguments, mdb,session):
-    '''size - get size of loaded data. example'''
+    '''size - get size of loaded data.'''
     if interface.check_arguments(arguments,0) == -1:
         return None
 
@@ -105,9 +108,13 @@ def get(arguments, mdb, session):
             if not el == None:
                 print("{} - {}".format(el[0],el[1]))
         print("slice #{}".format(counter))
-        q = input("-------------")
-        if "q" == q:break
-        counter+= 1
+        try:
+            q = input("-------------")
+            if "q" == q:break
+            counter+= 1
+        except KeyboardInterrupt:
+            print("")
+            return 1
             
     return 1#ok
 
