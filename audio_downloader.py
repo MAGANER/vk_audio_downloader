@@ -4,8 +4,7 @@ import os
 import urllib
 
 def __download_m3u8(link,dest):
-    subprocess.run(["ffmpeg","-i",link, "-acodec", "mp3", "-ab", "257k", dest])
-    #subprocess.run(["ffmpeg" ,"-i", link, "-vn", "-ar", "44100", "-ac", "2", "-b:a", "192k", dest])
+    subprocess.run(["ffmpeg", "-http_persistent", "false", "-i", link, "-c", "copy", "-b:a", "320k", dest])
 
 def __create_folder_to_download():
     folder = input("enter path, where files will be downloaded:")
