@@ -3,7 +3,7 @@ import re
 import os
 
 def __download_m3u8(link,dest):
-    subprocess.run(['ffmpeg', '-i', link, dest])
+    subprocess.run(["ffmpeg" ,"-i", link, "-vn", "-ar", "44100", "-ac", "2", "-b:a", "192k", dest])
 
 def __create_folder_to_download():
     folder = input("enter path, where files will be downloaded:")
