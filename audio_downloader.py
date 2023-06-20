@@ -12,19 +12,25 @@ def __create_folder_to_download():
         os.makedirs(folder)
     return folder
 
+def __input_wrapper(s):
+    try:
+        result = input(s)
+    except KeyboardInterrupt:
+        return ""
+    return result
 def download(items):
     '''optional ability that is invoked by find function'''
-    choice = input("Do you want to download something?(y/n)")
+    choice = __input_input("Do you want to download something?(y/n)")
     if "n" == choice:
         return 1
     
     elif "y" == choice:
         urls = list()
         
-        args = input("specify what you need:")
+        args = __input_input("specify what you need:")
         if args == "all":
             #get all urls
-            url = items[:]
+            urls = items[:]
                 
         elif "-" in args:
             #get urls in range
