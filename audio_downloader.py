@@ -20,14 +20,14 @@ def __input_wrapper(s):
     return result
 def download(items):
     '''optional ability that is invoked by find function'''
-    choice = __input_input("Do you want to download something?(y/n)")
+    choice = __input_wrapper("Do you want to download something?(y/n)")
     if "n" == choice:
         return 1
     
     elif "y" == choice:
         urls = list()
         
-        args = __input_input("specify what you need:")
+        args = __input_wrapper("specify what you need:")
         if args == "all":
             #get all urls
             urls = items[:]
