@@ -26,7 +26,8 @@ def open_db():
                   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                   title Text,
                   artist Text,
-                  url Text);
+                  url Text,
+                  album Text);
             '''
             db.execute(req.format("TRACKS"))
             db.execute(req.format("ALBUMS"))
@@ -43,7 +44,7 @@ def open_db():
 
 def add(db,data,table):
     '''add tracks albums'''
-    req = "INSERT INTO {}(id,title,artist,url) values(?,?,?,?)".format(table)
+    req = "INSERT INTO {}(id,title,artist,url,album) values(?,?,?,?,?)".format(table)
     with db:
         db.executemany(req,data)
 
@@ -89,7 +90,7 @@ def get_size(db, table):
             return row[0]
         
 def get_elements(db,table, substr="",case=0,field=""):
-    req = "SELECT title,artist,url FROM {}".format(table)
+    req = "SELECT title,artist,url,album FROM {}".format(table)
     if substr:
         title = field if case == 0 else "LOWER({})".format(field)
         req += " WHERE {} like '%{}%'".format(title,substr)

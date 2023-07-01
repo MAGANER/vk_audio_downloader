@@ -6,6 +6,7 @@ def __clear():
     print(" ",end="")
     print("\033[D",end="")
     sys.stdout.flush()
+    
 def secret_input(prompt,char=""):
     '''get terminal input without showing the input'''
     fb = lambda n: int.from_bytes(n,byteorder="big")# lambda to convert bytes into int

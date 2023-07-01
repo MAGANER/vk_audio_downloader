@@ -13,6 +13,7 @@ import requests
 from secret_input import *
 
 def list_split(main_list, chunk_size):
+    '''split list into list of equal chunks'''
     splitted_list = list()
 
     for i in range(0, len(main_list), chunk_size):
@@ -51,57 +52,54 @@ def ask():
 
 #---------------------------------------------------
 #section of functions representing user's commands
+
+def check_range(begin, end):
+    if begin < 0 or end < 0:
+        return False
+    if begin == end:
+        return False
+    if begin > end:
+        return False
+    return True
 def scan(arguments,mdb,session):
-    '''scan - scan accounts music to receive tracks in specified range. example : scan  10,100'''
-    if interface.check_arguments(arguments, 1) == -1:
+    '''scan - scan accounts music to receive tracks in specified range. example : scan  10,100 albums'''
+
+    #first argument is range and the second one is table name: artists or tracks
+    if interface.check_arguments(arguments, 2) == -1:
         return None
-
-    target = "tracks"
-    rng = arguments[0]
-
-    #DISABLED FOR SOMETIME
-    #if interface.check_target(target) == -1:
-    #    return None
     
-    begin, end = interface.get_number(rng)
-    if begin == -1:
-        print("{} is invalid range!".format(rng))
+    scaning_range = arguments[0]
+    target = arguments[1]
+    if interface.check_target(target) == -1:
+        return None
+    
+    begin, end = interface.get_number(scaning_range)
+    if not check_range(begin,end):
+        print("incorrect range {}:{}".format(begin,end))
         return None
 
-    run_through_music(begin,end,session.get_iter(),mdb,target)
-
+    if target == "tracks":
+        run_through_music(begin,end,session.get_iter(),mdb)
+    else:
+        run_through_albums(begin,end,session,mdb)
     return 1
 
 
 def size(arguments, mdb,session):
-    '''size - get size of loaded data.'''
-    if interface.check_arguments(arguments,0) == -1:
+    '''size - get size of loaded data, number of tracks or total size of all tracks of all albums'''
+    if interface.check_arguments(arguments,1) == -1:
         return None
 
-    target = "tracks"
+    target = arguments[0]
 
-    #DISABLED FOR SOMETIME
-    #if interface.check_target(target) == -1:
-    #    return None
+    if interface.check_target(target) == -1:
+        return None
     
     print("size of {} is {}.".format(target,DB.get_size(mdb,target.upper())))
 
     return 1#ok
 
-def get(arguments, mdb, session):
-    '''get - get list of tracks.'''
-    if interface.check_arguments(arguments,0) == -1:
-        return None
-
-    target = "tracks"
-
-    #DISABLED FOR SOMETIME
-    #if interface.check_target(target) == -1:
-    #    return None
-    
-    elements = DB.get_elements(mdb,target.upper())
-    total_size = len(elements)
-
+def __print_tracks(elements):
     counter = 0
     for l in list_split(elements,10):
         for el in l:
@@ -115,11 +113,55 @@ def get(arguments, mdb, session):
         except KeyboardInterrupt:
             print("")
             return 1
+def __print_albums(elements):
+
+    #create table where key is name of album and its value is list of album's tracks
+    albums = {}
+    for el in elements:
+        name = list(el)[-1]
+        if name in albums.keys():
+            albums[name].append((el[0],el[1]))
+        else:
+            albums[name] = []
+            albums[name].append((el[0],el[1]))
+
+    counter = 0
+    for key in albums:
+        print("album name:{}".format(key))
+        print("*---------------*")
+        for el in albums[key]:
+            print("{} - {}".format(el[0],el[1]))
+        print("album #{}".format(counter))
+        try:
+            q = input("------------")
+            if "q" == q:break
+            counter += 1
+        except KeyboardInterrupt:
+            print("")
+            return 1
+            
+def get(arguments, mdb, session):
+    '''get - get list of tracks or albums with their contents.'''
+    if interface.check_arguments(arguments,1) == -1:
+        return None
+
+    target = arguments[0]
+    if interface.check_target(target) == -1:
+        return None
+    
+    elements = DB.get_elements(mdb,target.upper())
+    total_size = len(elements)
+
+    if target.lower() == "tracks":
+        __print_tracks(elements)
+    else:
+        __print_albums(elements)
             
     return 1#ok
 
 def get_help(functions):
     '''help - show this text'''
+    #print docsting of every function that can be invoked by user
     for k, v in functions.items():
         print("{}.".format(str(v.__doc__)))
 
@@ -131,7 +173,7 @@ def clear(arguments,mdb,session):
 
 def find(arguments, mdb, session):
     '''find - find substring in saved tracks/albums, also specify case sensitivity. example - find "wish yo" artist|track 0
-       where 0 means non case sensible'''
+        tracks/albums where 0 means non case sensible'''
     def unite_substr(args):
         #i think there is better solution
         begin, end = -1,-1
@@ -162,18 +204,22 @@ def find(arguments, mdb, session):
 
     substr, arguments = unite_substr(arguments)
      
-    if interface.check_arguments(arguments,2) == -1:
+    if interface.check_arguments(arguments,3) == -1:
         return None
-    
-    #if interface.check_target(arguments[0]) == -1:
-    #    return None
 
-    target="tracks"
-    field,case = arguments
+    field,case,target = arguments
+    if interface.check_target(target) == -1:
+        return None
+
     if field not in ["track","artist"]:
         print("the third argument must be track or artist!")
         return None
 
+    #tracks mean title
+    #we can search matching name of artist
+    #or name of track. There is no row called track, so use title instead
+    if field == "track": field = "title"
+    
     items = list(set(DB.get_elements(mdb,target,substr[1:-1],case,field)))
     for obj in enumerate(items):
         print("{}: {} - {}".format(obj[0],obj[1][1],obj[1][0]))
@@ -183,8 +229,47 @@ def find(arguments, mdb, session):
     
 #------------------------------------------------------------    
 
+def fetch_album(id,owner_id,session, album_name):
+    try:
+        tracks = session.get(owner_id=owner_id,album_id=id)
+    except vk_api.exceptions.AccessDenied:
+        print("it's unable to read '{}' album's data\n\n".format(album_name))
+        return None
 
-def run_through_music(begin,end, mus_iter,mdb,table):
+    return tracks
+
+def run_through_albums(begin,end,session,mdb):
+    '''this function runs through albums list'''
+
+    current_user_id = session.user_id
+
+    #get albums and check if everything is ok
+    albums = session.get_albums(current_user_id)
+    if begin > len(albums) or end > len(albums):
+        print("range is out albums' number!")
+        return None
+
+
+    max_id = DB.get_max_id(mdb,"ALBUMS")
+    counter = 0 if max_id == None else max_id + 1
+    for album in albums[begin:end]:
+        print(album['title'])
+        print("*{}*\n".format("-"*10))
+
+        #get tracks of albums
+        tracks = fetch_album(album["id"],album["owner_id"],session,album["title"])
+        if not tracks is None:
+            for t in tracks:
+                data = [( counter, t['title'], t['artist'], t['url'], album['title'] )]
+                DB.add(mdb,data,"ALBUMS")
+                counter += 1
+                print("-"*20)
+                print("title:{}".format(t["title"]))
+                print("url:{}".format(t["url"]))
+                print("-"*20)
+    
+def run_through_music(begin,end, mus_iter,mdb):
+    '''this function runs through track list'''
     #get iterator for slice or for every item from response(good luck with it)
     #also if begin is None, then end is the same
     try:
@@ -193,11 +278,11 @@ def run_through_music(begin,end, mus_iter,mdb,table):
         print(str(e))
         return
     
-    max_id = DB.get_max_id(mdb,table)
+    max_id = DB.get_max_id(mdb,"TRACKS")
     counter = 0 if max_id == None else max_id + 1
     for track in it:
-        data = [(counter,str(track.get('title')),str(track.get('artist')),str(track.get('url')))]
-        DB.add(mdb,data,table)
+        data = [(counter,str(track.get('title')),str(track.get('artist')),str(track.get('url')),"none")]
+        DB.add(mdb,data,"TRACKS")
         counter += 1
         
         print("artist : {}".format(data[0][2]))

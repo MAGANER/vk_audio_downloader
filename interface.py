@@ -40,7 +40,7 @@ def check_arguments(args, correct_number):
         print("incorrect number of arguments")
         return -1
 def check_target(target):
-    if not target.upper() in ("TRACKS"): #,"ALBUMS"): currently disabled
+    if not target.upper() in ("TRACKS","ALBUMS"):
         print("{} is invalid target!".format(target))
         return -1
 
