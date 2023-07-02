@@ -3,6 +3,7 @@ from vk_api.audio import VkAudio
 import collections
 from itertools import islice
 import os
+import sys
 from os import system, path
 import db as DB
 import interface
@@ -295,7 +296,7 @@ if __name__ == "__main__":
     try:
         os.chdir("vk_audio_downloader")
     except Exception as e:
-        print("error! please move to folder or rename it as vk_audio_downloader")
+        print("error! run it as python vk_audio_downloader or run __main__.py directly!")
         exit(-1)
         
     session = get_session()
