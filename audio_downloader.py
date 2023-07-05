@@ -3,7 +3,7 @@ import re
 import os
 import urllib
 
-def __download_m3u8(link,dest):
+def download_m3u8(link,dest):
     subprocess.run(["ffmpeg", "-http_persistent", "false", "-i", link, "-c", "copy", "-b:a", "320k", dest])
 
 def __create_folder_to_download():
@@ -67,5 +67,5 @@ def download(items):
     _dir = __create_folder_to_download()
     for i in urls:
         name = i[1]+" "+i[0]
-        __download_m3u8(i[2],_dir+"/"+name+".mp3")
+        download_m3u8(i[2],_dir+"/"+name+".mp3")
     return 1
