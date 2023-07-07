@@ -12,6 +12,8 @@ import re
 import audio_downloader as ad
 import requests
 from secret_input import *
+from WindowMode import *
+from create_album_dict import *
 
 def list_split(main_list, chunk_size):
     '''split list into list of equal chunks'''
@@ -21,15 +23,16 @@ def list_split(main_list, chunk_size):
         splitted_list.append(main_list[i:i+chunk_size])
     return splitted_list
 
-def get_session():
+def get_session(login, password,break_function = lambda error_msg:exit(-1)):
     '''send request to get main vk api object'''
-    login,password = interface.get_data()
-    vk_session = vk_api.VkApi(login=login,password=password)
+    #weird app id to prevent Auth error
+    vk_session = vk_api.VkApi(login=login,password=password,app_id=2685278)
     try:
         vk_session.auth()
     except vk_api.AuthError as error_msg:
         print(error_msg)
-        exit(-1)
+        break_function(error_msg)
+        return None#if it doesn't break, than it will return None
         
     print("get session successfully!")
     return vk_session
@@ -100,31 +103,25 @@ def size(arguments, mdb,session):
 
     return 1#ok
 
-def __print_tracks(elements):
+def __print_tracks(elements,non_stop=False):
     counter = 0
     for l in list_split(elements,10):
         for el in l:
             if not el == None:
                 print("{} - {}".format(el[0],el[1]))
-        print("slice #{}".format(counter))
-        try:
-            q = input("-------------")
-            if "q" == q:break
-            counter+= 1
-        except KeyboardInterrupt:
-            print("")
-            return 1
-def __print_albums(elements):
+        if not non_stop:
+            print("slice #{}".format(counter))
+            try:
+                q = input("-------------")
+                if "q" == q:break
+                counter+= 1
+            except KeyboardInterrupt:
+                print("")
+                return 1
+def __print_albums(elements,non_stop=False):
 
     #create table where key is name of album and its value is list of album's tracks
-    albums = {}
-    for el in elements:
-        name = list(el)[-1]
-        if name in albums.keys():
-            albums[name].append((el[0],el[1]))
-        else:
-            albums[name] = []
-            albums[name].append((el[0],el[1]))
+    albums = cad(elements)#create albums dict
 
     counter = 0
     for key in albums:
@@ -133,15 +130,20 @@ def __print_albums(elements):
         for el in albums[key]:
             print("{} - {}".format(el[0],el[1]))
         print("album #{}".format(counter))
-        try:
-            q = input("------------")
-            if "q" == q:break
-            counter += 1
-        except KeyboardInterrupt:
-            print("")
-            return 1
+        counter+=1
+        if not non_stop:
+            try:
+                q = input("------------")
+                if "q" == q:break
+            except KeyboardInterrupt:
+                print("")
+                return 1
+
+    #return data for graphical mode
+    if non_stop:
+        return albums
             
-def get(arguments, mdb, session):
+def get(arguments, mdb, session,non_stop=False):
     '''get - get list of tracks or albums with their contents.'''
     if interface.check_arguments(arguments,1) == -1:
         return None
@@ -154,9 +156,11 @@ def get(arguments, mdb, session):
     total_size = len(elements)
 
     if target.lower() == "tracks":
-        __print_tracks(elements)
+        __print_tracks(elements,non_stop)
+        return elements#for graphical mode
     else:
-        __print_albums(elements)
+        result = __print_albums(elements,non_stop)
+        return result
             
     return 1#ok
 
@@ -172,7 +176,7 @@ def clear(arguments,mdb,session):
     os.system("clear")
     return 1#ok
 
-def find(arguments, mdb, session):
+def find(arguments, mdb, session,terminal=True):
     '''find - find substring in saved tracks/albums, also specify case sensitivity. example - find "wish yo" artist|track 0
         tracks/albums where 0 means non case sensible'''
     def unite_substr(args):
@@ -204,7 +208,6 @@ def find(arguments, mdb, session):
 
 
     substr, arguments = unite_substr(arguments)
-     
     if interface.check_arguments(arguments,3) == -1:
         return None
 
@@ -220,12 +223,17 @@ def find(arguments, mdb, session):
     #we can search matching name of artist
     #or name of track. There is no row called track, so use title instead
     if field == "track": field = "title"
-    
-    items = list(set(DB.get_elements(mdb,target,substr[1:-1],case,field)))
+
+    sub = substr[1:-1]
+    items = list(set(DB.get_elements(mdb,target,sub,case,field)))
     for obj in enumerate(items):
         print("{}: {} - {}".format(obj[0],obj[1][1],obj[1][0]))
 
-    ad.download(items)
+    if terminal:
+        ad.download(items)
+    else:
+        return items
+    
     return 1#
     
 #------------------------------------------------------------    
@@ -290,19 +298,33 @@ def run_through_music(begin,end, mus_iter,mdb):
         print("title : {}".format(data[0][1]))
         print("link(url) : {}".format(data[0][3]))
         print('-'*10)
-    
-if __name__ == "__main__":
+
+def run_terminal_version(functions_table):
     system("cls")
-    try:
-        os.chdir("vk_audio_downloader")
-    except Exception as e:
-        print("error! run it as python vk_audio_downloader or run __main__.py directly!")
-        exit(-1)
-        
-    session = get_session()
+    #try:
+    #    os.chdir("vk_audio_downloader")
+    #except Exception as e:
+    #    print("error! run it as python vk_audio_downloader!")
+    #    exit(-1)
+
+    login,password = interface.get_data()
+    session = get_session(login,password)
     vkaudio = VkAudio(session)
     mdb = DB.open_db()
 
+    interface.run(functions_table,mdb,vkaudio)
+
+def run_graphical_mode(functions):
+    win = Window()
+    session = win.run_enter_menu(get_session)
+    if session is None:
+        exit(0)
+    vkaudio = VkAudio(session)
+    mdb = DB.open_db()
+
+    win.run_main_menu(functions,mdb,vkaudio)
+    
+if __name__ == "__main__":
     functions = {
         "scan":scan,
         "size":size,
@@ -310,5 +332,16 @@ if __name__ == "__main__":
         "help":get_help,
         "clear":clear,
         "find":find
-        }
-    interface.run(functions,mdb,vkaudio)
+    }
+    
+    run_in_terminal = len(sys.argv) == 2 and sys.argv[1] == "terminal"
+    if run_in_terminal:
+        run_terminal_version(functions)
+    elif not run_in_terminal and len(sys.argv) != 1:
+        print("incorrect arguments!")
+        exit(-1)
+    else:
+        del(functions["size"])
+        del(functions["help"])
+        del(functions["clear"])
+        run_graphical_mode(functions)
