@@ -1,10 +1,9 @@
 import subprocess
 import re
 import os
-import urllib
-
-def download_m3u8(link,dest):
+def download_m3u8(link,dest,meta_data):
     subprocess.run(["ffmpeg", "-http_persistent", "false", "-i", link, "-c", "copy", "-b:a", "320k", dest])
+    
 
 def __create_folder_to_download():
     folder = input("enter path, where files will be downloaded:")
@@ -21,9 +20,9 @@ def __input_wrapper(s):
 def download(items):
     '''optional ability that is invoked by find function'''
     choice = __input_wrapper("Do you want to download something?(y/n)")
+
     if "n" == choice:
         return 1
-    
     elif "y" == choice:
         urls = list()
         
@@ -67,5 +66,9 @@ def download(items):
     _dir = __create_folder_to_download()
     for i in urls:
         name = i[1]+" "+i[0]
-        download_m3u8(i[2],_dir+"/"+name+".mp3")
+        meta_data = {}
+        meta_data["artist"] = i[1]
+        meta_data["title"] = i[0]
+        meta_data["album"] = "" if i[3] == "none" else i[3]
+        download_m3u8(i[2],_dir+"/"+name+".mp3",meta_data)
     return 1

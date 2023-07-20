@@ -197,7 +197,7 @@ class Window:
             items = cad(items)
         downloading_data = []
         if title == "tracks":
-            downloading_data = [(link,band+" "+name) for band,name,link,_ in items]
+            downloading_data = [(link,band+"-"+name,album) for band,name,link, album in items]
             items = [band + ":"+name for band,name, _,_ in items]
         
         listbox = Listbox(window,selectmode=MULTIPLE) if title == "tracks" else Listbox(window)
@@ -225,8 +225,14 @@ class Window:
     def download(self,items):
         directory = fd.askdirectory(title="open folder:", initialdir="/")
         if directory:
-            for link,name in items:
-                download_m3u8(link,directory+"/"+name+".mp3")
+            for link,name, album in items:
+                meta_data = {}
+                band, _name = name.split("-")
+                album = "" if album == "none" else album
+                meta_data["artist"] = band
+                meta_data["title"] = _name
+                meta_data["album"] = album
+                download_m3u8(link,directory+"/"+name+".mp3",meta_data)
             messagebox.showinfo("downloading complete!","tracks are downloaded and can be found at {}".format(directory))
         
     def __run_get_submenu(self,get_function):
