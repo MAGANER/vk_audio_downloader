@@ -166,9 +166,9 @@ class Window:
             data = albums[n]
             items, downloading_data = [],[]
             for name, band, link in data:
-                file_name = band+" "+name
+                file_name = band+"-"+name
                 items.append(file_name)
-                downloading_data.append((link,file_name))
+                downloading_data.append((link,file_name,n))
 
             tracks = Listbox(window,selectmode=MULTIPLE)
             self.__fill_listbox(tracks,items)
