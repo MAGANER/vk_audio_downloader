@@ -3,7 +3,11 @@ import re
 import os
 def download_m3u8(link,dest,meta_data):
     subprocess.run(["ffmpeg", "-http_persistent", "false", "-i", link, "-c", "copy", "-b:a", "320k", dest])
-    
+
+    args = ["ate", dest, "artist:"+meta_data["artist"],"title:"+meta_data["title"]]
+    if meta_data["album"] != "":
+        args.append("album:"+meta_data["album"])
+    subprocess.run(args)
 
 def __create_folder_to_download():
     folder = input("enter path, where files will be downloaded:")
