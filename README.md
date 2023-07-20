@@ -15,6 +15,10 @@ little CLI app to download tracks from vk.
 Officially it is called access token for api.
 After you will be able to use the application.
 
+## Graphical mode
+Now i added graphical mode. it's runned by default. You can find build of this application in build section.<br>
+To run it within terminal - ```vk_audio_downloader.exe terminal```
+
 ## Command list
 ```scan``` - scan account's music to receive tracks in specified range. example : scan  10,100.<br>
 After music is scanned to obtain name, artist and url, data is saved in local data base and then<br>
