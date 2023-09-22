@@ -153,6 +153,7 @@ def get(arguments, mdb, session,non_stop=False):
         return None
     
     elements = DB.get_elements(mdb,target.upper())
+    elements.reverse()
     total_size = len(elements)
 
     if target.lower() == "tracks":
