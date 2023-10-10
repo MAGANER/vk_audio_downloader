@@ -4,6 +4,7 @@ from audio_downloader import *
 import tkinter.filedialog as fd
 import db
 from create_album_dict import *
+from functools import reduce
 
 class Window:
 
@@ -227,7 +228,8 @@ class Window:
         if directory:
             for link,name, album in items:
                 meta_data = {}
-                band, _name = name.split("-")
+                band, *_name = name.split("-")
+                _name = reduce(lambda a,b:a+b,_name)
                 album = "" if album == "none" else album
                 meta_data["artist"] = band
                 meta_data["title"] = _name
