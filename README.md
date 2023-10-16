@@ -4,6 +4,11 @@ little CLI app to download tracks from vk.
 # Dependencies
 ```vk_api```   - 11.9.9<br>
 ```requests``` - 2.26.0<br>
+```bs4```<br>
+
+# Notes
+Seems like my nuitka build doesn't work properly on Windows 10,<br>
+so prefered way to run application is ```python vk_audio_downloader/```
 
 # Overall
 1. It's available on windows only.<br>
